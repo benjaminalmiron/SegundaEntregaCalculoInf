@@ -27,7 +27,14 @@ namespace SegundaEntrega_Calculo
                     return;
                 }
 
-                var funcionProcesada = funcion.ToEntity();
+                var funcionProcesada = funcion.ToEntity().Simplify();
+
+                // Verifica que la funcion sea valida y que contenga la variable 'x'
+                if (!funcionProcesada.Vars.Contains("x"))
+                {
+                    MessageBox.Show("La función debe contener la variable 'x'");
+                    return;
+                }
 
                 //Se calculan derviadas de nivel 1 y 2
                 derivadaEntity = funcionProcesada.Derive("x"); // primera derivada como Entity
