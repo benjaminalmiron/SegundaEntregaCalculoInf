@@ -5,10 +5,6 @@ namespace SegundaEntrega_Calculo
 {
     public partial class Form1 : Form
     {
-        // Variable para almacenar la primera derivada de la función como Entity (para poder evaluarla más adelante)
-        Entity derivadaEntity = null;
-        // Variable para guardar la primera derivada como string (para mostrarla en el Label)
-        string derivada = "";
         public Form1()
         {
             InitializeComponent();
