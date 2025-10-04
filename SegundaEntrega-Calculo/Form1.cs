@@ -1,11 +1,11 @@
-using AngouriMath;
+﻿using AngouriMath;
 using AngouriMath.Extensions;
 
 namespace SegundaEntrega_Calculo
 {
     public partial class Form1 : Form
     {
-        // Variable para almacenar la primera derivada de la funci�n como Entity (para poder evaluarla m�s adelante)
+        // Variable para almacenar la primera derivada de la función como Entity (para poder evaluarla más adelante)
         Entity derivadaEntity = null;
         // Variable para guardar la primera derivada como string (para mostrarla en el Label)
         string derivada = "";
@@ -16,42 +16,80 @@ namespace SegundaEntrega_Calculo
 
         private void btnCalcular_Click(object sender, EventArgs e)
         {
-            try
-            {
-                //Ingreso de funcion
-                var funcion = txtFuncion.Text.Trim();
+            // Variables para almacenar la función y sus derivadas
+            Entity funcion = Entity.Number.Integer.Zero;
+            Entity derivada = Entity.Number.Integer.Zero;
+            Entity derivada_segunda = Entity.Number.Integer.Zero;
 
-                if (string.IsNullOrEmpty(funcion))
+            // Esta lista se usará para calcular los intervalos de crecimiento y decrecimiento
+            double[] listaPuntosCriticos = new double[0];
+            double[] listaPuntosInflexion = new double[0];
+
+            //try
+            {
+                // Ingreso de funcion
+                string funcion_texto = txtFuncion.Text.Trim();
+
+                // Verifica que el campo de texto no esté vacío
+                if (string.IsNullOrEmpty(funcion_texto))
                 {
                     MessageBox.Show("Ingrese una funcion valida");
                     return;
                 }
 
-                var funcionProcesada = funcion.ToEntity().Simplify();
+                // Convierte el texto de la función a un objeto Entity de AngouriMath y simplifica la expresión
+                // Lei que simplificar la funcion ayuda a evitar errores en el calculo de derivadas
+                funcion = funcion_texto.ToEntity().Simplify();
 
                 // Verifica que la funcion sea valida y que contenga la variable 'x'
-                if (!funcionProcesada.Vars.Contains("x"))
+                // Esto es util para evitar que se ponga como funcion expresiones no matematicas
+                if (!funcion.Vars.Contains("x"))
                 {
-                    MessageBox.Show("La funci�n debe contener la variable 'x'");
+                    MessageBox.Show("La función debe contener la variable 'x'");
                     return;
                 }
 
-                //Se calculan derviadas de nivel 1 y 2
-                derivadaEntity = funcionProcesada.Derive("x"); // primera derivada como Entity
-                derivada = derivadaEntity.ToString().Trim();
-                var derivada2 = derivadaEntity.Derive("x").ToString().Trim();
+                // En las variables se mantienen los objetos entity, no las versiones de texto
 
+                // Calculo de la primera derivada
+                derivada = funcion.Differentiate("x").Simplify();
 
-                Resul_Derivada.Text = $"f'(x) = {derivada}\nf''(x) = {derivada2}";
+                // Si la derivada es cero, la función es constante o no depende de 'x'
+                if (derivada == Entity.Number.Integer.Zero)
+                {
+                    MessageBox.Show("La función ingresada es constante o no contiene 'x'");
+                    return;
+                }
 
+                // Calculo de la segunda derivada
+                derivada_segunda = derivada.Differentiate("x").Simplify();
 
+                // Muestra las derivadas en el labal
+                Resul_Derivada.Text = $"f'(x) = {derivada.ToString()}\nf''(x) = {derivada_segunda.ToString()}";
 
                 //Calculo de punto criticos de la derivada 1
                 var puntosCriticos = MathS.SolveEquation(derivada, "x");
 
                 if (puntosCriticos != null)
                 {
-                    Resul_PuntoCritico.Text = $"x => {puntosCriticos}";
+                    // Convertimos el conjunto de puntos críticos a un array para poder iterar sobre ellos
+                    string puntosTexto = puntosCriticos.ToString();
+                    string puntosSinLlaves = puntosTexto.Trim('{', '}').Trim();
+                    string[] puntosArray = puntosSinLlaves.Split(',');
+
+                    // Y generamos una lista de valores numéricos a partir de los puntos críticos
+                    // Esta lista se usará para calcular los intervalos de crecimiento y decrecimiento
+                    listaPuntosCriticos = new double[puntosArray.Length];
+
+                    for (int i = 0; i < puntosArray.Length; i++)
+                    {
+                        Entity puntoEntity = puntosArray[i].Trim().ToEntity();
+                        listaPuntosCriticos[i] = (double)puntoEntity.EvalNumerical();
+                    }
+
+                    Array.Sort(listaPuntosCriticos);
+
+                    Resul_PuntoCritico.Text = "x => " + string.Join(", ", listaPuntosCriticos.Select(p => p.ToString("F2")));
                 }
                 else
                 {
@@ -59,88 +97,131 @@ namespace SegundaEntrega_Calculo
                 }
 
                 //Calculo de punto inflexion en la derivada 2
-                var puntosInflexion = MathS.SolveEquation(derivada2, "x");
+                var puntosInflexion = MathS.SolveEquation(derivada_segunda, "x");
 
-                Resul_Inflexion.Text = $"x = {puntosInflexion}";
-
-                // Calculo de crecimiento y decrecimiento
-                try
+                if (puntosInflexion != null)
                 {
-                    //Se convierte la primera derivada a un objeto Entity para poder evaluar su valor en diferentes puntos
-                    var derivadaEntity1 = derivada.ToEntity(); // convertimos la primera derivada a Entity
-                    string resultado = "";
-                    //Definimos algunos puntos de prueba para analizar el comportamiento de la funci�n
-                    double[] puntos = { -10, -1, 0, 1, 10 };
-                    foreach (var x in puntos)
+                    string puntosTexto = puntosInflexion.ToString();
+                    string puntosSinLlaves = puntosTexto.Trim('{', '}').Trim();
+                    string[] puntosArray = puntosSinLlaves.Split(',');
+
+                    listaPuntosInflexion = new double[puntosArray.Length];
+
+                    for (int i = 0; i < puntosArray.Length; i++)
                     {
-                        //Evaluamos el valor de la derivada en el punto x   
-                        var valorEntity = derivadaEntity1.Substitute("x", x).EvalNumerical();
-
-                        //Convertimos el valor a double para poder compararlo
-                        double valor = (double)valorEntity;
-
-                        //Se determina si la funcion crece, decrece o tiene un punto critico
-                        if (valor > 0)
-                            resultado += $"f'(x) > 0 en x={x} => Crece\n";
-                        else if (valor < 0)
-                            resultado += $"f'(x) < 0 en x={x} => Decrece\n";
-                        else
-                            resultado += $"f'(x) = 0 en x={x}\n";
+                        Entity puntoEntity = puntosArray[i].Trim().ToEntity();
+                        listaPuntosInflexion[i] = (double)puntoEntity.EvalNumerical();
                     }
+
+                    Array.Sort(listaPuntosInflexion);
+
+                    Resul_Inflexion.Text = "x => " + string.Join(", ", listaPuntosInflexion.Select(p => p.ToString("F2")));
+                }
+                else
+                {
+                    Resul_Inflexion.Text = "No hay puntos de inflexion";
+                }
+
+                // Calculo de los intervalos de crecimiento y decrecimiento
+                if (puntosCriticos != null)
+                {
+                    // Variable para almacenar el resultado final
+                    string resultado = "";
+
+                    bool primer = true;
+                    double ultimoPunto = double.NegativeInfinity;
+
+                    foreach (var punto in listaPuntosCriticos)
+                    {
+                        // Intervalo entre -∞ y el primer punto crítico
+                        if (primer)
+                        {
+                            // Evaluamos la derivada en un punto antes del primer punto crítico
+                            double valor = (double)derivada.Substitute("x", punto - 1).EvalNumerical();
+                            if (valor > 0)
+                                resultado += $"En el intervalo (-∞, {punto.ToString("F2")}) f(x)  => Crece\n";
+                            else
+                                resultado += $"En el intervalo (-∞, {punto.ToString("F2")}) f(x)  => Decrece\n";
+                            primer = false;
+                        }
+                        else
+                        {
+                            // Evaluamos la derivada en un punto entre el último punto crítico y el actual
+                            double valor = (double)derivada.Substitute("x", (ultimoPunto + punto) / 2).EvalNumerical();
+                            if (valor > 0)
+                                resultado += $"En el intervalo ({ultimoPunto.ToString("F2")}, {punto.ToString("F2")}) f(x)  => Crece\n";
+                            else
+                                resultado += $"En el intervalo ({ultimoPunto.ToString("F2")}, {punto.ToString("F2")}) f(x)  => Decrece\n";
+                        }
+
+                        // Actualizamos el último punto crítico
+                        ultimoPunto = punto;
+                    }
+
+                    // Intervalo entre el último punto crítico y +∞
+                    double valorFinal = (double)derivada.Substitute("x", ultimoPunto + 1).EvalNumerical();
+                    if (valorFinal > 0)
+                        resultado += $"En el intervalo ({ultimoPunto.ToString("F2")}, +∞) f(x)  => Crece\n";
+                    else
+                        resultado += $"En el intervalo ({ultimoPunto.ToString("F2")}, +∞) f(x)  => Decrece\n";
+
                     // Mostramos el resultado en el Label5 del formulario
                     label5.Text = resultado;
                 }
-                catch
+                else
                 {
                     // En caso de error, mostramos un mensaje de aviso
                     label5.Text = "No se pudo calcular crecimiento/decrecimiento";
                 }
 
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al analizar la funci�n: {ex.Message}");
-            }
-
-            // Calculo de concavidad
-            try
-            {
-                // Obtenemos la segunda derivada de la funci�n
-                // La segunda derivada nos indica c�mo cambia la pendiente de la funci�n:
-                // si es positiva, la funci�n es c�ncava hacia arriba; si es negativa, c�ncava hacia abajo.
-                var derivada2Entity = derivadaEntity.Derive("x"); // segunda derivada
-                string resultado = "";
-
-
-                //Se define un conjunto de puntos para evaluar la concavidad
-                double[] puntos = { -10, -1, 0, 1, 10 };
-                //Se recorre cada punto para evaluar la segunda derivada
-                foreach (var x in puntos)
+                // Calculo de concavidad
+                if (puntosInflexion != null)
                 {
-                    // Sustituimos el valor de x en la segunda derivada y evaluamos num�ricamente
-                    var valorEntity = derivada2Entity.Substitute("x", x).EvalNumerical();
+                    string resultado = "";
 
-                    // Convertimos el valor a double
-                    double valor = (double)valorEntity;
+                    bool primer = true;
+                    double ultimoPunto = double.NegativeInfinity;
 
-                    // Dependiendo del signo de f''(x) determinamos la concavidad
-                    if (valor > 0)
-                        resultado += $"f''(x) > 0 en x={x} => C�ncava hacia arriba\n"; //pendiente creciente
-                    else if (valor < 0)
-                        resultado += $"f''(x) < 0 en x={x} => C�ncava hacia abajo\n"; //pendiente decreciente
+                    foreach (var punto in listaPuntosInflexion)
+                    {
+                        if (primer)
+                        {
+                            double valor = (double)derivada_segunda.Substitute("x", punto - 1).EvalNumerical();
+                            if (valor > 0)
+                                resultado += $"En el intervalo (-∞, {punto.ToString("F2")}) f(x) => Cóncava hacia arriba\n";
+                            else
+                                resultado += $"En el intervalo (-∞, {punto.ToString("F2")}) f(x) => Cóncava hacia abajo\n";
+                            primer = false;
+                        }
+                        else
+                        {
+                            double valor = (double)derivada_segunda.Substitute("x", (ultimoPunto + punto) / 2).EvalNumerical();
+                            if (valor > 0)
+                                resultado += $"En el intervalo ({ultimoPunto.ToString("F2")}, {punto.ToString("F2")}) f(x) => Cóncava hacia arriba\n";
+                            else
+                                resultado += $"En el intervalo ({ultimoPunto.ToString("F2")}, {punto.ToString("F2")}) f(x) => Cóncava hacia abajo\n";
+                        }
+
+                        ultimoPunto = punto;
+                    }
+
+                    double valorFinal = (double)derivada_segunda.Substitute("x", ultimoPunto + 1).EvalNumerical();
+                    if (valorFinal > 0)
+                        resultado += $"En el intervalo ({ultimoPunto.ToString("F2")}, +∞) f(x) => Cóncava hacia arriba\n";
                     else
-                        resultado += $"f''(x) = 0 en x={x} => Punto de inflexi�n\n"; // posible cambio de concavidad
-                }
-                // Mostramos todos los resultados en el Label6 del formulario
-                label6.Text = resultado;
-            }
-            catch
-            {
-                // Si ocurre alg�n error (por ejemplo, funci�n inv�lida o divisi�n por cero), mostramos un mensaje
-                label6.Text = "No se pudo calcular la concavidad";
-            }
+                        resultado += $"En el intervalo ({ultimoPunto.ToString("F2")}, +∞) f(x) => Cóncava hacia abajo\n";
 
+                    label6.Text = resultado;
+                }
+                else
+                {
+                    label6.Text = "No se pudo calcular la concavidad";
+                }
+            }
+            //catch (Exception ex)
+            {
+               // MessageBox.Show($"Error al analizar la función: {ex.Message}");
+            }
         }
     }
 }
