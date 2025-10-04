@@ -92,25 +92,25 @@
             Resul_Inflexion.BorderStyle = BorderStyle.Fixed3D;
             Resul_Inflexion.Location = new Point(76, 322);
             Resul_Inflexion.Name = "Resul_Inflexion";
-            Resul_Inflexion.Size = new Size(313, 56);
+            Resul_Inflexion.Size = new Size(313, 75);
             Resul_Inflexion.TabIndex = 5;
             Resul_Inflexion.Text = "Puntos Inflexion";
             // 
             // Resul_CrecDecre
             // 
             Resul_CrecDecre.BorderStyle = BorderStyle.Fixed3D;
-            Resul_CrecDecre.Location = new Point(76, 413);
+            Resul_CrecDecre.Location = new Point(76, 429);
             Resul_CrecDecre.Name = "Resul_CrecDecre";
-            Resul_CrecDecre.Size = new Size(313, 56);
+            Resul_CrecDecre.Size = new Size(313, 75);
             Resul_CrecDecre.TabIndex = 6;
             Resul_CrecDecre.Text = "Crecimiento/Decrecimiento";
             // 
             // ResulConcavidad
             // 
             ResulConcavidad.BorderStyle = BorderStyle.Fixed3D;
-            ResulConcavidad.Location = new Point(76, 496);
+            ResulConcavidad.Location = new Point(76, 542);
             ResulConcavidad.Name = "ResulConcavidad";
-            ResulConcavidad.Size = new Size(313, 56);
+            ResulConcavidad.Size = new Size(313, 75);
             ResulConcavidad.TabIndex = 7;
             ResulConcavidad.Text = "Concavidad";
             // 
@@ -135,7 +135,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(76, 297);
+            label4.Location = new Point(76, 298);
             label4.Name = "label4";
             label4.Size = new Size(92, 15);
             label4.TabIndex = 10;
@@ -144,29 +144,27 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(76, 389);
+            label5.Location = new Point(76, 404);
             label5.Name = "label5";
             label5.Size = new Size(160, 15);
             label5.TabIndex = 11;
             label5.Text = "Crecimiento / Decrecimiento";
-            label5.Click += label5_Click;
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(76, 481);
+            label6.Location = new Point(76, 515);
             label6.Name = "label6";
             label6.Size = new Size(70, 15);
             label6.TabIndex = 12;
             label6.Text = "Concavidad";
-            label6.Click += label6_Click;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveBorder;
-            ClientSize = new Size(489, 561);
+            ClientSize = new Size(489, 626);
             Controls.Add(label6);
             Controls.Add(label5);
             Controls.Add(label4);
