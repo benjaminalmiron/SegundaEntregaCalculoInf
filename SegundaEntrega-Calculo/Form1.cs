@@ -1,14 +1,11 @@
-using AngouriMath;
+ï»¿using AngouriMath;
 using AngouriMath.Extensions;
 
 namespace SegundaEntrega_Calculo
 {
     public partial class Form1 : Form
     {
-        // Variable para almacenar la primera derivada de la función como Entity (para poder evaluarla más adelante)
-        Entity derivadaEntity = null;
-        // Variable para guardar la primera derivada como string (para mostrarla en el Label)
-        string derivada = "";
+
         public Form1()
         {
             InitializeComponent();
@@ -19,32 +16,40 @@ namespace SegundaEntrega_Calculo
             try
             {
                 //Ingreso de funcion
-                var funcion = txtFuncion.Text.Trim();
+                var funcionTxt = txtFuncion.Text.Trim();
 
-                if (string.IsNullOrEmpty(funcion))
+                if (string.IsNullOrEmpty(funcionTxt))
                 {
                     MessageBox.Show("Ingrese una funcion valida");
                     return;
                 }
 
-                var funcionProcesada = funcion.ToEntity();
-
-                //Se calculan derviadas de nivel 1 y 2
-                derivadaEntity = funcionProcesada.Derive("x"); // primera derivada como Entity
-                derivada = derivadaEntity.ToString().Trim();
-                var derivada2 = derivadaEntity.Derive("x").ToString().Trim();
+                Entity funcion = MathS.FromString(funcionTxt);
+                var x = MathS.Var("x");
 
 
-                Resul_Derivada.Text = $"f'(x) = {derivada}\nf''(x) = {derivada2}";
+
+                var primeraDerivada = funcion.Derive(x).Simplify();
+                var segundaDerivada = primeraDerivada.Derive(x).Simplify();
+
+                //Fuerzo reodernamiento y limpieza de signos
+
+                primeraDerivada = primeraDerivada.Simplify();
+                segundaDerivada = segundaDerivada.Simplify();
+
+
+                Resul_Derivada.Text = $"f'(x) = {primeraDerivada}\r\n" +
+                $"f''(x) = {segundaDerivada}";
 
 
 
                 //Calculo de punto criticos de la derivada 1
-                var puntosCriticos = MathS.SolveEquation(derivada, "x");
+
+                var puntosCriticos = MathS.SolveEquation(primeraDerivada, x);
 
                 if (puntosCriticos != null)
                 {
-                    Resul_PuntoCritico.Text = $"x => {puntosCriticos}";
+                    Resul_PuntoCritico.Text = $"x => {puntosCriticos.Simplify()}";
                 }
                 else
                 {
@@ -52,88 +57,76 @@ namespace SegundaEntrega_Calculo
                 }
 
                 //Calculo de punto inflexion en la derivada 2
-                var puntosInflexion = MathS.SolveEquation(derivada2, "x");
+                var puntosInflexion = MathS.SolveEquation(segundaDerivada, x);
 
                 Resul_Inflexion.Text = $"x = {puntosInflexion}";
 
                 // Calculo de crecimiento y decrecimiento
                 try
                 {
-                    //Se convierte la primera derivada a un objeto Entity para poder evaluar su valor en diferentes puntos
-                    var derivadaEntity1 = derivada.ToEntity(); // convertimos la primera derivada a Entity
                     string resultado = "";
-                    //Definimos algunos puntos de prueba para analizar el comportamiento de la función
                     double[] puntos = { -10, -1, 0, 1, 10 };
-                    foreach (var x in puntos)
+
+                    foreach (var valorX in puntos)
                     {
-                        //Evaluamos el valor de la derivada en el punto x   
-                        var valorEntity = derivadaEntity1.Substitute("x", x).EvalNumerical();
+                        var valorEntity = primeraDerivada.Substitute(x, valorX).EvalNumerical();
+                        double valor = (double)valorEntity.RealPart;
 
-                        //Convertimos el valor a double para poder compararlo
-                        double valor = (double)valorEntity;
-
-                        //Se determina si la funcion crece, decrece o tiene un punto critico
                         if (valor > 0)
-                            resultado += $"f'(x) > 0 en x={x} => Crece\n";
+                            resultado += $"f'(x) > 0 en x={valorX} â†’ Crece\r\n";
                         else if (valor < 0)
-                            resultado += $"f'(x) < 0 en x={x} => Decrece\n";
+                            resultado += $"f'(x) < 0 en x={valorX} â†’ Decrece\r\n";
                         else
-                            resultado += $"f'(x) = 0 en x={x}\n";
+                            resultado += $"f'(x) = 0 en x={valorX}\r\n";
                     }
-                    // Mostramos el resultado en el Label5 del formulario
-                    label5.Text = resultado;
+
+                    Resul_CrecDecre.Text = resultado;
                 }
                 catch
                 {
-                    // En caso de error, mostramos un mensaje de aviso
-                    label5.Text = "No se pudo calcular crecimiento/decrecimiento";
+                    Resul_CrecDecre.Text = "No se pudo calcular crecimiento/decrecimiento";
                 }
 
+
+
+
+                // Calculo de concavidad
+                try
+                {
+                    string resultado = "";
+                    double[] puntos = { -10, -1, 0, 1, 10 };
+
+                    foreach (var valorX in puntos)
+                    {
+                        var valorEntity = segundaDerivada.Substitute(x, valorX).EvalNumerical();
+                        double valor = (double)valorEntity.RealPart;
+
+                        if (valor > 0)
+                            resultado += $"f''(x) > 0 en x={valorX} â†’ CÃ³ncava hacia arriba\r\n";
+                        else if (valor < 0)
+                            resultado += $"f''(x) < 0 en x={valorX} â†’ CÃ³ncava hacia abajo\r\n";
+                        else
+                            resultado += $"f''(x) = 0 en x={valorX} â†’ Punto de inflexiÃ³n\r\n";
+                    }
+
+                    ResulConcavidad.Text = resultado;
+                }
+                catch
+                {
+                    ResulConcavidad.Text = "No se pudo calcular la concavidad";
+                }
 
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al analizar la función: {ex.Message}");
+                MessageBox.Show($"Error al analizar la funciÃ³n: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
 
-            // Calculo de concavidad
-            try
-            {
-                // Obtenemos la segunda derivada de la función
-                // La segunda derivada nos indica cómo cambia la pendiente de la función:
-                // si es positiva, la función es cóncava hacia arriba; si es negativa, cóncava hacia abajo.
-                var derivada2Entity = derivadaEntity.Derive("x"); // segunda derivada
-                string resultado = "";
-
-
-                //Se define un conjunto de puntos para evaluar la concavidad
-                double[] puntos = { -10, -1, 0, 1, 10 };
-                //Se recorre cada punto para evaluar la segunda derivada
-                foreach (var x in puntos)
-                {
-                    // Sustituimos el valor de x en la segunda derivada y evaluamos numéricamente
-                    var valorEntity = derivada2Entity.Substitute("x", x).EvalNumerical();
-
-                    // Convertimos el valor a double
-                    double valor = (double)valorEntity;
-
-                    // Dependiendo del signo de f''(x) determinamos la concavidad
-                    if (valor > 0)
-                        resultado += $"f''(x) > 0 en x={x} => Cóncava hacia arriba\n"; //pendiente creciente
-                    else if (valor < 0)
-                        resultado += $"f''(x) < 0 en x={x} => Cóncava hacia abajo\n"; //pendiente decreciente
-                    else
-                        resultado += $"f''(x) = 0 en x={x} => Punto de inflexión\n"; // posible cambio de concavidad
-                }
-                // Mostramos todos los resultados en el Label6 del formulario
-                label6.Text = resultado;
-            }
-            catch
-            {
-                // Si ocurre algún error (por ejemplo, función inválida o división por cero), mostramos un mensaje
-                label6.Text = "No se pudo calcular la concavidad";
-            }
-
+        private void btnData_Click(object sender, EventArgs e)
+        {
+            Info form = new Info();
+            form.ShowDialog();
         }
     }
 }
