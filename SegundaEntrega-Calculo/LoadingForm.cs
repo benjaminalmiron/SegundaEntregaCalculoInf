@@ -14,25 +14,29 @@ namespace SegundaEntrega_Calculo
     {
         public LoadingForm()
         {
-            InitializeComponent();
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.ControlBox = false;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "Procesando...";
-            this.Width = 250;
-            this.Height = 100;
+            InitializeComponent(); // Inicializa los componentes del formulario
 
+            this.FormBorderStyle = FormBorderStyle.FixedDialog; // Evita que se cambie el tamaño del formulario
+            this.ControlBox = false; // Oculta los botones de minimizar, maximizar y cerrar
+            this.StartPosition = FormStartPosition.CenterScreen; // Centra el formulario en la pantalla
+            this.Text = "Procesando..."; // Título del formulario
+            this.Width = 250; // Ancho del formulario
+            this.Height = 100; // Alto del formulario
+
+            // Crear y configurar etiqueta con mensaje
             Label lbl = new Label();
-            lbl.Text = "Por favor espere...";
-            lbl.Dock = DockStyle.Fill;
-            lbl.TextAlign = ContentAlignment.MiddleCenter;
-            lbl.Font = new Font("Segoe UI", 10);
-            this.Controls.Add(lbl);
+            lbl.Text = "Por favor espere..."; // Mensaje que verá el usuario
+            lbl.Dock = DockStyle.Fill; // Ocupa todo el formulario
+            lbl.TextAlign = ContentAlignment.MiddleCenter; // Centra el texto
+            lbl.Font = new Font("Segoe UI", 10); // Fuente y tamaño
+            this.Controls.Add(lbl); // Agrega la etiqueta al formulario
 
+            // Crear y configurar barra de progreso
             ProgressBar bar = new ProgressBar();
-            bar.Style = ProgressBarStyle.Marquee;
-            bar.Dock = DockStyle.Bottom;
-            this.Controls.Add(bar);
+            bar.Style = ProgressBarStyle.Marquee; // Animación continua, sin valor fijo
+            bar.Dock = DockStyle.Bottom; // Se ubica en la parte inferior
+            this.Controls.Add(bar); // Agrega la barra al formulario
+        
 
         }
     }
